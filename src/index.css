@@ -1,0 +1,53 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg: #0A0A0B;
+  --card: #1C1C21;
+  --card-hover: #26262D;
+  --border: #2E2E36;
+  --primary: #E8820C;
+  --primary-hover: #F59332;
+  --text: #F3F4F6;
+  --text-muted: #9CA3AF;
+  --error: #EF4444;
+  --success: #22C55E;
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--primary);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--primary-hover);
+}
+
+button {
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 15px;
+}
+
+input {
+  font-family: inherit;
+  font-size: 15px;
+}
