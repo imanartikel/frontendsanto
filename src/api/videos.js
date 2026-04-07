@@ -9,4 +9,7 @@ export const videosApi = {
 
   history: () =>
     client.get('/api/v1/videos/history'),
+
+  createAffiliate: (payload) =>
+    client.post('/api/v1/videos/create-affiliate', payload),
 }

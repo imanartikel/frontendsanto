@@ -147,11 +147,25 @@ const styles = {
 
 const NAV_ITEMS = [
   {
+    icon: '✨',
+    title: 'Prompt Architect',
+    desc: 'Expand simple ideas into highly detailed prompts ready for Midjourney or FLUX.',
+    cost: '2 tokens / prompt',
+    path: '/prompter',
+  },
+  {
     icon: '🖼️',
     title: 'Image Generation',
     desc: 'Generate 9 unique images from a single prompt using Imagen AI.',
     cost: '10 tokens / 9 images',
     path: '/images',
+  },
+  {
+    icon: '🎞️',
+    title: 'Frame Sequence Builder',
+    desc: 'Convert high-level concepts into start-to-finish video frame scripts.',
+    cost: '4 tokens / seq',
+    path: '/video-prompter',
   },
   {
     icon: '🎬',
@@ -163,16 +177,61 @@ const NAV_ITEMS = [
   {
     icon: '📊',
     title: 'UGC Analyzer',
-    desc: 'Analyze any video for hooks, tone, audience fit, and UGC score.',
-    cost: '20 tokens / analysis',
+    desc: 'Audit any video for hook effectiveness, tone, and viral potential.',
+    cost: '15 tokens / analysis',
     path: '/analyzer',
+  },
+  {
+    icon: '📈',
+    title: 'Affiliate Video Analyzer',
+    desc: 'Audit marketing metrics and extract one-click copyable CTAs, captions, & hashtags.',
+    cost: '5 tokens / analysis',
+    path: '/affiliate-analyzer',
+  },
+  {
+    icon: '🎙️',
+    title: 'Podcast Affiliate Generator',
+    desc: 'Craft natural, organic script segments that weave products into your podcast topic.',
+    cost: '2 tokens / segment',
+    path: '/podcast-prompter',
+  },
+  {
+    icon: '✨',
+    title: 'Autonomous Video Gen',
+    desc: 'Generate a complete 10s affiliate video from a single product description.',
+    cost: '20 tokens / video',
+    path: '/video-generator',
+  },
+  {
+    icon: '🎭',
+    title: 'My Library',
+    desc: 'Browse and manage all your generated visual assets and audits.',
+    cost: 'Free access',
+    path: '/library',
   },
 ]
 
 export default function DashboardPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { user, logout } = useAuthStore()
-  const { balance, isLoading } = useTokenBalance()
+  const { balance, isLoading, refetch } = useTokenBalance()
+  const [successMessage, setSuccessMessage] = useState(null)
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search)
+    if (params.get('payment_id')) {
+      setSuccessMessage('Payment successful! Your tokens will arrive shortly.')
+      refetch() // Try to refresh balance
+      
+      // Clean up URL
+      window.history.replaceState({}, document.title, "/dashboard")
+      
+      // Clear message after 5s
+      const timer = setTimeout(() => setSuccessMessage(null), 5000)
+      return () => clearTimeout(timer)
+    }
+  }, [location, refetch])
 
   const handleLogout = async () => {
     await logout()
@@ -197,6 +256,23 @@ export default function DashboardPage() {
       </nav>
 
       <div style={styles.content}>
+        {successMessage && (
+          <div style={{
+            background: 'rgba(16,185,129,0.15)',
+            border: '1px solid rgba(16,185,129,0.3)',
+            borderRadius: '12px',
+            padding: '16px',
+            color: '#10B981',
+            fontSize: '14px',
+            fontWeight: '600',
+            marginBottom: '24px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px'
+          }}>
+            ✅ {successMessage}
+          </div>
+        )}
         {/* Greeting */}
         <div style={styles.greeting}>Hey, {firstName} 👋</div>
         <div style={styles.greetingSub}>What are we creating today?</div>

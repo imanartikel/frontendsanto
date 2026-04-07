@@ -16,4 +16,7 @@ export const authApi = {
 
   me: () =>
     client.get('/api/v1/auth/me'),
+
+  generations: () =>
+    client.get('/api/v1/auth/generations'),
 }
