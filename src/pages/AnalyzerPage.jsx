@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import useAuthStore from '../store/authStore'
 import { useTokenBalance } from '../hooks/useTokenBalance'
 import { analyzerApi } from '../api/analyzer'
+import { extractErrorMsg } from '../utils/errors'
 
 const styles = {
   page: { minHeight: '100vh', background: '#0A0A0B', padding: '0', color: '#F3F4F6' },
@@ -95,7 +96,7 @@ export default function AnalyzerPage() {
       setResult(response.data.analysis)
       refreshBalance()
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to analyze video. Please check the URL.')
+      setError(extractErrorMsg(err, 'Failed to analyze video. Please check the URL.'))
     } finally {
       setLoading(false)
     }
@@ -146,7 +147,7 @@ export default function AnalyzerPage() {
             onClick={handleAnalyze}
             disabled={loading || !videoUrl.trim()}
           >
-            {loading ? 'Deconstructing Video... (STUB)' : 'Deconstruct Video (15 tokens)'}
+            {loading ? 'Deconstructing Video...' : 'Deconstruct Video (15 tokens)'}
           </button>
         </div>
 
@@ -187,7 +188,7 @@ export default function AnalyzerPage() {
                         </div>
                       </div>
                       <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #2E2E36' }}>
-                        <span style={styles.sceneTitle} style={{ display: 'inline', color: '#9CA3AF', fontSize: '12px', fontWeight: 'bold' }}>Technique Used: </span>
+                        <span style={{ ...styles.sceneTitle, display: 'inline', color: '#9CA3AF', fontSize: '12px', fontWeight: 'bold' }}>Technique Used: </span>
                         <span style={{ fontSize: '13px', color: '#F3F4F6' }}>{scene.technique}</span>
                       </div>
                     </div>

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import useAuthStore from '../store/authStore'
 import { useTokenBalance } from '../hooks/useTokenBalance'
 import { tokensApi } from '../api/tokens'
+import { paymentsApi } from '../api/payments'
 
 const styles = {
   page: {
@@ -192,10 +193,17 @@ export default function TokensPage() {
     setIsBuying(packageId)
     try {
       const resp = await paymentsApi.createCheckout(packageId)
-      const { checkout_url } = resp.data
-      
-      // Redirect to Xendit Checkout
-      window.location.href = checkout_url
+      const { checkout_url, status } = resp.data
+
+      if (status === 'settled' || checkout_url?.includes('mock_success=true')) {
+        // Stub/dev mode — tokens already added, just refresh balance in-place
+        await refreshBalance()
+        await fetchHistory()
+        setIsBuying(null)
+      } else {
+        // Real Xendit checkout — redirect to payment page
+        window.location.href = checkout_url
+      }
     } catch (err) {
       console.error('Checkout failed:', err)
       alert('Failed to initiate checkout. Please try again.')

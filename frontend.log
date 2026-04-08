@@ -1,0 +1,8 @@
+
+> ugcx-frontend@0.1.0 dev
+> vite --port 5173 --host 127.0.0.1
+
+
+  VITE v6.4.1  ready in 216 ms
+
+  ➜  Local:   http://127.0.0.1:5173/

@@ -13,6 +13,8 @@ import LibraryPage from './pages/LibraryPage'
 import PrompterPage from './pages/PrompterPage'
 import VideoPrompterPage from './pages/VideoPrompterPage'
 import AffiliatePage from './pages/AffiliatePage'
+import PodcastPrompterPage from './pages/PodcastPrompterPage'
+import AffiliateGeneratorPage from './pages/AffiliateGeneratorPage'
 
 function RootRedirect() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)

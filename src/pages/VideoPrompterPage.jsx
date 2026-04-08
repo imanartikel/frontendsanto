@@ -199,8 +199,8 @@ export default function VideoPrompterPage() {
               </div>
               
               <div title="Visual pacing representation" style={STYLES.timelineBar}>
-                {result.frames.map((f, i) => {
-                  const widthPct = (f.duration_seconds / result.total_duration) * 100
+                {(result?.frames || []).map((f, i) => {
+                  const widthPct = (f.duration_seconds / (result?.total_duration || 1)) * 100
                   const color = COLORS[i % COLORS.length]
                   return (
                     <div key={i} style={STYLES.timelineSegment(color, widthPct)} title={`Frame ${f.frame_number}: ${f.duration_seconds}s`}>
@@ -212,7 +212,7 @@ export default function VideoPrompterPage() {
 
               {/* Frame Cards List */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
-                {result.frames.map((frame, index) => (
+                {(result?.frames || []).map((frame, index) => (
                   <div key={index} style={STYLES.frameCard}>
                     <div style={STYLES.frameHeader}>
                       <span style={STYLES.frameTitle}>

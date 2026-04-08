@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import useAuthStore from '../store/authStore'
 import { useTokenBalance } from '../hooks/useTokenBalance'
 import { videosApi } from '../api/videos'
+import { extractErrorMsg } from '../utils/errors'
+import { proxify } from '../utils/assets'
 
 const styles = {
   page: {
@@ -206,6 +208,8 @@ export default function VideoGenPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
+  // Removed duplicated proxify logic - using shared utility
+
   const pollingRef = useRef(null)
 
   const handleLogout = async () => {
@@ -227,7 +231,7 @@ export default function VideoGenPage() {
       setStatus(data.status)
       refreshBalance()
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to submit job.')
+      setError(extractErrorMsg(err, 'Failed to submit job.'))
       setLoading(false)
     }
   }
@@ -340,7 +344,7 @@ export default function VideoGenPage() {
 
           {status === 'done' && resultUrls.length > 0 && (
             <video controls autoPlay style={styles.resultVideo}>
-              <source src={resultUrls[0]} type="video/mp4" />
+              <source src={proxify(resultUrls[0])} type="video/mp4" />
               Your browser does not support the video tag.
             </video>
           )}

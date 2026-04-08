@@ -4,7 +4,8 @@ import useAuthStore from '../store/authStore'
 import { useTokenBalance } from '../hooks/useTokenBalance'
 import { imagesApi } from '../api/images'
 import ImageCard from '../components/ImageCard'
-
+import { extractErrorMsg } from '../utils/errors'
+import { proxify } from '../utils/assets'
 const styles = {
   page: {
     minHeight: '100vh',
@@ -158,12 +159,15 @@ export default function ImageGenPage() {
 
     try {
       const response = await imagesApi.generate(prompt)
-      // The backend returns { generation_id, status, result_urls, ... }
-      setResults(response.data.result_urls)
+      // Normalize response urls to use the backend proxy
+      const rawUrls = response.data.result_urls || []
+      const proxiedUrls = rawUrls.map(url => proxify(url))
+      
+      setResults(proxiedUrls)
       // Refetch balance after successful generation
       refreshBalance()
     } catch (err) {
-      const msg = err.response?.data?.detail || 'Failed to generate images. Please try again.'
+      const msg = extractErrorMsg(err, 'Failed to generate images. Please try again.')
       setError(msg)
     } finally {
       setLoading(false)

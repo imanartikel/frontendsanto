@@ -63,13 +63,6 @@ const PRESETS = [
   { id: 'flat_lay', label: 'Flat Lay' }
 ]
 
-const MODELS = [
-  { id: 'midjourney', label: 'Midjourney v6' },
-  { id: 'flux', label: 'FLUX.1' },
-  { id: 'dalle', label: 'DALL-E 3' },
-  { id: 'imagen', label: 'Google Imagen 3' }
-]
-
 const RATIOS = ['1:1', '9:16', '16:9', '4:5']
 
 export default function PrompterPage() {
@@ -79,7 +72,7 @@ export default function PrompterPage() {
 
   const [desc, setDesc] = useState('')
   const [style, setStyle] = useState('ugc_selfie')
-  const [model, setModel] = useState('midjourney')
+  const model = 'imagen'
   const [ratio, setRatio] = useState('9:16')
   
   const [loading, setLoading] = useState(false)
@@ -161,19 +154,11 @@ export default function PrompterPage() {
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '16px', marginTop: '24px' }}>
-              <div style={{ flex: 1 }}>
-                <label style={STYLES.label}>Target Model</label>
-                <select style={STYLES.select} value={model} onChange={e => setModel(e.target.value)}>
-                  {MODELS.map(m => <option key={m.id} value={m.id}>{m.label}</option>)}
-                </select>
-              </div>
-              <div style={{ flex: 1 }}>
-                <label style={STYLES.label}>Aspect Ratio</label>
-                <select style={STYLES.select} value={ratio} onChange={e => setRatio(e.target.value)}>
-                  {RATIOS.map(r => <option key={r} value={r}>{r}</option>)}
-                </select>
-              </div>
+            <div style={{ marginTop: '24px' }}>
+              <label style={STYLES.label}>Aspect Ratio</label>
+              <select style={STYLES.select} value={ratio} onChange={e => setRatio(e.target.value)}>
+                {RATIOS.map(r => <option key={r} value={r}>{r}</option>)}
+              </select>
             </div>
 
             <button 
@@ -192,9 +177,6 @@ export default function PrompterPage() {
           <div style={STYLES.outputCard}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ fontSize: '16px', color: '#E8820C' }}>Output Prompt</h2>
-              {result && (
-                <span style={{ fontSize: '12px', color: '#9CA3AF' }}>Model: {result.metadata.target_model}</span>
-              )}
             </div>
             
             <div style={STYLES.resultArea}>

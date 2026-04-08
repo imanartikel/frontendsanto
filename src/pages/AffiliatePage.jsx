@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import useAuthStore from '../store/authStore'
 import { useTokenBalance } from '../hooks/useTokenBalance'
 import { affiliateApi } from '../api/affiliate'
+import { extractErrorMsg } from '../utils/errors'
 
 const styles = {
   page: { minHeight: '100vh', background: '#0A0A0B', padding: '0', color: '#F3F4F6' },
@@ -76,7 +77,7 @@ export default function AffiliatePage() {
       setResult(response.data.analysis)
       refreshBalance()
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to analyze affiliate video.')
+      setError(extractErrorMsg(err, 'Failed to analyze affiliate video.'))
     } finally {
       setLoading(false)
     }
@@ -126,7 +127,7 @@ export default function AffiliatePage() {
             style={{ ...styles.analyzeBtn, opacity: loading || !videoUrl.trim() ? 0.6 : 1 }}
             onClick={handleAnalyze} disabled={loading || !videoUrl.trim()}
           >
-            {loading ? 'Analyzing Marketing Performance... (STUB)' : 'Audit & Extract Assets (5 tokens)'}
+            {loading ? 'Analyzing Marketing Performance...' : 'Audit & Extract Assets (5 tokens)'}
           </button>
         </div>
 

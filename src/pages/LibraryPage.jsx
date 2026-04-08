@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import useAuthStore from '../store/authStore'
 import { useTokenBalance } from '../hooks/useTokenBalance'
 import { authApi } from '../api/auth'
+import { proxify } from '../utils/assets'
 
 const styles = {
   page: {
@@ -179,6 +180,8 @@ export default function LibraryPage() {
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all') // all, image, video, analysis
 
+  // Removed duplicated proxify logic - using shared utility
+
   const fetchGenerations = async () => {
     try {
       const resp = await authApi.generations()
@@ -270,9 +273,9 @@ export default function LibraryPage() {
                   <div style={styles.cardTypeOverlay}>{item.type}</div>
                   {item.status === 'completed' && item.result_urls?.length > 0 ? (
                     item.type === 'video' ? (
-                      <video muted src={item.result_urls[0]} style={styles.resultImg} />
+                      <video muted src={proxify(item.result_urls[0])} style={styles.resultImg} />
                     ) : (
-                      <img src={item.result_urls[0]} style={styles.resultImg} alt="Thumbnail" />
+                      <img src={proxify(item.result_urls[0])} style={styles.resultImg} alt="Thumbnail" />
                     )
                   ) : (
                     <div style={{ color: '#374151' }}>{item.type === 'analysis' ? '📊 Report' : '⌛ Processing'}</div>

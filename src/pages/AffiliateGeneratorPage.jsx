@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import useAuthStore from '../store/authStore'
 import { useTokenBalance } from '../hooks/useTokenBalance'
 import { videosApi } from '../api/videos'
+import { proxify } from '../utils/assets'
 
 const styles = {
   page: { minHeight: '100vh', background: '#0A0A0B', color: '#F3F4F6' },
@@ -56,6 +57,8 @@ export default function AffiliateGeneratorPage() {
   const [status, setStatus] = useState(null) // 'queued' | 'running' | 'done' | 'failed'
   const [videoUrl, setVideoUrl] = useState(null)
   const [history, setHistory] = useState([])
+
+  // Removed duplicated proxify logic - using shared utility
 
   // Polling logic
   useEffect(() => {
@@ -161,7 +164,7 @@ export default function AffiliateGeneratorPage() {
           ) : videoUrl ? (
             <div>
               <div style={styles.videoContainer}>
-                <video src={videoUrl} controls autoPlay style={{ width: '100%', display: 'block' }} />
+                <video src={proxify(videoUrl)} controls autoPlay style={{ width: '100%', display: 'block' }} />
               </div>
               <div style={{ display: 'flex', gap: '12px' }}>
                 <a href={videoUrl} download style={{ ...styles.button, textDecoration: 'none', textAlign: 'center', flex: 1 }}>Download Video</a>
@@ -178,7 +181,7 @@ export default function AffiliateGeneratorPage() {
           <div style={styles.historyGrid}>
             {history.filter(h => h.result_urls?.length > 0).map((h, i) => (
               <div key={i} style={styles.historyCard} onClick={() => { setVideoUrl(h.result_urls[0]); setStatus('completed'); window.scrollTo(0,0); }}>
-                <video src={h.result_urls[0]} style={{ width: '100%', height: '120px', objectFit: 'cover' }} />
+                <video src={proxify(h.result_urls[0])} style={{ width: '100%', height: '120px', objectFit: 'cover' }} />
                 <div style={{ padding: '8px', fontSize: '11px', color: '#9CA3AF', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {h.prompt}
                 </div>
