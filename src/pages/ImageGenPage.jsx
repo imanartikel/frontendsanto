@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import JSZip from 'jszip'
 import useAuthStore from '../store/authStore'
 import { useTokenBalance } from '../hooks/useTokenBalance'
 import { imagesApi } from '../api/images'
@@ -145,6 +146,35 @@ export default function ImageGenPage() {
   const [loading, setLoading] = useState(false)
   const [results, setResults] = useState(null)
   const [error, setError] = useState('')
+  const [zipping, setZipping] = useState(false)
+
+  const handleDownloadAll = async () => {
+    if (!results || results.length === 0) return
+    setZipping(true)
+    try {
+      const zip = new JSZip()
+      await Promise.all(
+        results.map(async (url, idx) => {
+          const res = await fetch(url)
+          const blob = await res.blob()
+          zip.file(`generated-image-${idx + 1}.png`, blob)
+        })
+      )
+      const content = await zip.generateAsync({ type: 'blob' })
+      const objectUrl = URL.createObjectURL(content)
+      const link = document.createElement('a')
+      link.href = objectUrl
+      link.download = 'generated-images.zip'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(objectUrl)
+    } catch {
+      setError('Failed to download images as ZIP.')
+    } finally {
+      setZipping(false)
+    }
+  }
 
   const handleLogout = async () => {
     await logout()
@@ -228,9 +258,28 @@ export default function ImageGenPage() {
 
         {results && (
           <div style={styles.resultsSection}>
-            <h2 style={{ ...styles.label, marginBottom: '24px', fontSize: '18px' }}>
-              Results
-            </h2>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+              <h2 style={{ ...styles.label, marginBottom: 0, fontSize: '18px' }}>
+                Results
+              </h2>
+              <button
+                onClick={handleDownloadAll}
+                disabled={zipping}
+                style={{
+                  background: zipping ? '#555' : '#E8820C',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '8px 18px',
+                  color: 'white',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: zipping ? 'not-allowed' : 'pointer',
+                  opacity: zipping ? 0.7 : 1,
+                }}
+              >
+                {zipping ? 'Zipping...' : 'Download All (ZIP)'}
+              </button>
+            </div>
             <div style={styles.grid}>
               {results.map((url, idx) => (
                 <ImageCard key={idx} url={url} index={idx + 1} />

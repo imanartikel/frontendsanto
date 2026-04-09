@@ -39,14 +39,22 @@ const styles = {
 }
 
 export default function ImageCard({ url, index }) {
-  const handleDownload = (e) => {
+  const handleDownload = async (e) => {
     e.stopPropagation()
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `generated-image-${index}.png`
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
+    try {
+      const res = await fetch(url)
+      const blob = await res.blob()
+      const objectUrl = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = objectUrl
+      link.download = `generated-image-${index}.png`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(objectUrl)
+    } catch {
+      window.open(url, '_blank')
+    }
   }
 
   return (

@@ -3,6 +3,17 @@
 > vite --port 5173 --host 127.0.0.1
 
 
-  VITE v6.4.1  ready in 216 ms
+  VITE v6.4.1  ready in 208 ms
 
   ➜  Local:   http://127.0.0.1:5173/
+11:49:04 AM [vite] (client) hmr update /src/components/ImageCard.jsx
+11:49:04 AM [vite] (client) hmr update /src/components/ImageCard.jsx
+11:51:16 AM [vite] (client) hmr update /src/pages/ImageGenPage.jsx
+11:51:16 AM [vite] (client) ✨ new dependencies optimized: jszip
+11:51:16 AM [vite] (client) ✨ optimized dependencies changed. reloading
+11:51:25 AM [vite] (client) hmr update /src/pages/ImageGenPage.jsx
+11:51:34 AM [vite] (client) hmr update /src/pages/ImageGenPage.jsx
+12:02:48 PM [vite] (client) hmr update /src/pages/AffiliatePage.jsx
+12:38:03 PM [vite] (client) hmr update /src/pages/VideoPrompterPage.jsx
+12:38:17 PM [vite] (client) hmr update /src/pages/PrompterPage.jsx
+12:48:55 PM [vite] (client) hmr update /src/pages/VideoPrompterPage.jsx

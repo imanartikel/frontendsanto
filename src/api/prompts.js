@@ -6,4 +6,7 @@ export const promptsApi = {
 
   generateVideoPrompt: (payload) =>
     client.post('/api/v1/prompts/generate-video', payload),
+
+  generateShopeeSequence: (payload) =>
+    client.post('/api/v1/prompts/generate-shopee-sequence', payload),
 }

@@ -2,252 +2,297 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import useAuthStore from '../store/authStore'
 import { useTokenBalance } from '../hooks/useTokenBalance'
-import { promptsApi } from '../api/prompts'
+import client from '../api/client'
+import { proxify } from '../utils/assets'
 
-const STYLES = {
+const S = {
   page: { minHeight: '100vh', background: '#0A0A0B', color: '#F3F4F6' },
   nav: {
     background: '#1C1C21', borderBottom: '1px solid #2E2E36', padding: '0 24px',
     height: '56px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
   },
   navLogo: { fontSize: '20px', fontWeight: '700', color: '#E8820C', cursor: 'pointer' },
-  container: { maxWidth: '1200px', margin: '0 auto', padding: '40px 24px', display: 'flex', gap: '32px', flexWrap: 'wrap' },
-  leftPanel: { flex: '1 1 350px', display: 'flex', flexDirection: 'column', gap: '24px' },
-  rightPanel: { flex: '2 1 600px', display: 'flex', flexDirection: 'column' },
-  card: { background: '#1C1C21', border: '1px solid #2E2E36', borderRadius: '16px', padding: '24px' },
-  textarea: {
-    width: '100%', minHeight: '100px', background: '#0A0A0B', border: '1px solid #2E2E36',
-    borderRadius: '8px', padding: '16px', color: '#F3F4F6', fontSize: '14px', resize: 'vertical',
-    fontFamily: 'inherit'
+  tokenBadge: {
+    background: 'rgba(232,130,12,0.12)', border: '1px solid rgba(232,130,12,0.3)',
+    borderRadius: '20px', padding: '4px 12px', fontSize: '13px', fontWeight: '600', color: '#E8820C',
   },
-  label: { fontSize: '13px', fontWeight: '700', color: '#9CA3AF', textTransform: 'uppercase', marginBottom: '8px', display: 'block' },
-  pillGroup: { display: 'flex', gap: '8px', flexWrap: 'wrap' },
+  logoutBtn: { background: 'none', border: '1px solid #2E2E36', borderRadius: '8px', padding: '6px 14px', color: '#9CA3AF', fontSize: '13px', cursor: 'pointer' },
+  container: { maxWidth: '1200px', margin: '0 auto', padding: '40px 24px' },
+  twoCol: { display: 'grid', gridTemplateColumns: '360px 1fr', gap: '32px', alignItems: 'start' },
+  card: { background: '#1C1C21', border: '1px solid #2E2E36', borderRadius: '16px', padding: '24px' },
+  label: { fontSize: '12px', fontWeight: '700', color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', display: 'block' },
+  input: {
+    width: '100%', background: '#0A0A0B', border: '1px solid #2E2E36', borderRadius: '8px',
+    padding: '12px 14px', color: '#F3F4F6', fontSize: '14px', outline: 'none', boxSizing: 'border-box',
+  },
+  textarea: {
+    width: '100%', background: '#0A0A0B', border: '1px solid #2E2E36', borderRadius: '8px',
+    padding: '12px 14px', color: '#F3F4F6', fontSize: '14px', outline: 'none', resize: 'vertical',
+    minHeight: '80px', fontFamily: 'inherit', boxSizing: 'border-box',
+  },
   pill: (active) => ({
     padding: '6px 14px', borderRadius: '20px', fontSize: '13px', fontWeight: '600', cursor: 'pointer',
     background: active ? 'rgba(232,130,12,0.15)' : '#0A0A0B',
     color: active ? '#E8820C' : '#9CA3AF',
     border: `1px solid ${active ? '#E8820C' : '#2E2E36'}`,
-    transition: 'all 0.2s'
   }),
-  button: {
-    background: '#E8820C', border: 'none', borderRadius: '8px', padding: '14px',
-    color: '#FFF', fontSize: '15px', fontWeight: '700', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%'
+  generateBtn: {
+    width: '100%', padding: '14px', background: '#E8820C', borderRadius: '10px',
+    border: 'none', color: '#FFF', fontSize: '15px', fontWeight: '700', cursor: 'pointer', marginTop: '24px',
   },
-  timelineBar: { display: 'flex', height: '24px', borderRadius: '12px', overflow: 'hidden', marginBottom: '24px', border: '1px solid #2E2E36', background: '#0A0A0B' },
-  timelineSegment: (color, width) => ({
-    height: '100%', width: `${width}%`, background: color, display: 'flex', alignItems: 'center', justifyContent: 'center',
-    fontSize: '11px', fontWeight: '800', color: '#FFF', textShadow: '0 1px 2px rgba(0,0,0,0.5)', cursor: 'pointer'
-  }),
-  frameCard: { background: 'rgba(28,28,33,0.6)', border: '1px solid #2E2E36', borderRadius: '12px', padding: '16px', marginBottom: '16px', backdropFilter: 'blur(10px)' },
-  frameHeader: { display: 'flex', justifyContent: 'space-between', marginBottom: '12px', alignItems: 'center' },
-  frameTitle: { fontSize: '14px', fontWeight: '700', color: '#F3F4F6', textTransform: 'uppercase' },
-  frameMeta: { fontSize: '12px', color: '#9CA3AF', background: '#0A0A0B', padding: '4px 8px', borderRadius: '4px' },
-  editArea: {
-    width: '100%', minHeight: '80px', background: '#0A0A0B', border: '1px solid #2E2E36',
-    borderRadius: '8px', padding: '12px', color: '#D1D5DB', fontSize: '14px', resize: 'vertical'
-  }
+  sceneCard: { background: '#0A0A0B', border: '1px solid #2E2E36', borderRadius: '10px', padding: '14px', marginBottom: '10px' },
+  imageCard: { background: '#0A0A0B', border: '1px solid #2E2E36', borderRadius: '12px', overflow: 'hidden', marginBottom: '16px' },
+  copyBtn: { background: 'rgba(232,130,12,0.1)', color: '#E8820C', border: '1px solid rgba(232,130,12,0.3)', padding: '5px 12px', borderRadius: '6px', fontSize: '12px', cursor: 'pointer', fontWeight: '600', whiteSpace: 'nowrap' },
+  error: { color: '#EF4444', background: 'rgba(239,68,68,0.1)', padding: '12px', borderRadius: '8px', fontSize: '14px', border: '1px solid rgba(239,68,68,0.2)', marginTop: '16px' },
 }
 
-const DURATIONS = [10, 15, 30, 60]
-const STYLES_OPT = [
-  { id: 'ugc_testimonial', label: 'Testimonial' },
-  { id: 'product_demo', label: 'Product Demo' },
-  { id: 'unboxing', label: 'Unboxing' },
-  { id: 'tutorial', label: 'Tutorial' }
+const SCENE_COLORS = ['#E8820C', '#8B5CF6', '#10B981', '#3B82F6', '#EF4444', '#F59E0B']
+const AI_MODEL_OPTIONS = [
+  { id: 'female', label: 'Model Wanita' },
+  { id: 'male', label: 'Model Pria' },
+  { id: 'none', label: 'No Model' },
 ]
-const MODELS = ['kling', 'runway', 'pika', 'vidu']
-const RATIOS = ['9:16', '16:9', '1:1']
-
-// A minimal color palette for timeline segments
-const COLORS = ['#E8820C', '#8B5CF6', '#10B981', '#3B82F6', '#EF4444', '#F59E0B', '#14B8A6', '#6366F1']
 
 export default function VideoPrompterPage() {
   const navigate = useNavigate()
   const { logout } = useAuthStore()
-  const { balance, refetch } = useTokenBalance()
+  const { balance, isLoading: balanceLoading, refetch } = useTokenBalance()
 
-  const [concept, setConcept] = useState('')
-  const [duration, setDuration] = useState(15)
-  const [styleMode, setStyleMode] = useState('ugc_testimonial')
-  const [model, setModel] = useState('kling')
-  const [ratio, setRatio] = useState('9:16')
-  
+  const [shopeeUrl, setShopeeUrl] = useState('')
+  const [angleNotes, setAngleNotes] = useState('')
+  const [aiModel, setAiModel] = useState('female')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState(null)
-  const [copied, setCopied] = useState(false)
+  const [error, setError] = useState('')
+  const [copied, setCopied] = useState({})
 
   const handleGenerate = async () => {
-    if (!concept.trim()) return
+    if (!shopeeUrl.trim()) return
     setLoading(true)
+    setError('')
+    setResult(null)
     try {
-      const resp = await promptsApi.generateVideoPrompt({
-        concept, duration_target: duration, style: styleMode,
-        target_model: model, aspect_ratio: ratio
+      const resp = await client.post('/api/v1/prompts/generate-shopee-sequence', {
+        shopee_url: shopeeUrl.trim(),
+        angle_notes: angleNotes.trim(),
+        ai_model: aiModel,
       })
       setResult(resp.data)
       refetch()
     } catch (err) {
-      alert(err.response?.data?.detail || 'Generation failed.')
+      setError(err.response?.data?.detail || 'Generation failed. Try again.')
     } finally {
       setLoading(false)
     }
   }
 
-  // Handle inline edits locally
-  const updateFramePrompt = (index, newText) => {
-    if (!result) return
-    const newFrames = [...result.frames]
-    newFrames[index].prompt = newText
-    setResult({ ...result, frames: newFrames })
-  }
-
-  const handleCopyAll = () => {
-    if (!result) return
-    const jsonStr = JSON.stringify(result.frames, null, 2)
-    navigator.clipboard.writeText(jsonStr)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+  const handleCopy = (text, key) => {
+    navigator.clipboard.writeText(text)
+    setCopied(prev => ({ ...prev, [key]: true }))
+    setTimeout(() => setCopied(prev => ({ ...prev, [key]: false })), 2000)
   }
 
   return (
-    <div style={STYLES.page}>
-      <nav style={STYLES.nav}>
-        <span style={STYLES.navLogo} onClick={() => navigate('/')}>UGCX</span>
+    <div style={S.page}>
+      <nav style={S.nav}>
+        <span style={S.navLogo} onClick={() => navigate('/')}>UGCX</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <span style={{ color: '#E8820C', fontWeight: '600', fontSize: '13px' }}>
-            {balance ?? 0} tokens
-          </span>
-          <button style={{ background:'none', border:'none', color:'#9CA3AF', cursor:'pointer' }} onClick={() => { logout(); navigate('/login') }}>
-            Sign out
-          </button>
+          <span style={S.tokenBadge}>{balanceLoading ? '…' : (balance ?? 0)} tokens</span>
+          <button style={S.logoutBtn} onClick={() => { logout(); navigate('/login') }}>Sign out</button>
         </div>
       </nav>
 
-      <div style={STYLES.container}>
-        {/* LEFT PANEL: Inputs */}
-        <div style={STYLES.leftPanel}>
-          <div>
-            <div style={{ color: '#9CA3AF', cursor: 'pointer', marginBottom: '16px', fontSize: '14px' }} onClick={() => navigate('/')}>
-              ← Back to Dashboard
-            </div>
-            <h1 style={{ fontSize: '24px', marginBottom: '8px' }}>Frame Sequence Builder</h1>
-            <p style={{ color: '#9CA3AF', fontSize: '14px' }}>Break down video concepts into structured clip prompts.</p>
-          </div>
-
-          <div style={STYLES.card}>
-            <label style={STYLES.label}>Video Concept</label>
-            <textarea 
-              style={STYLES.textarea}
-              placeholder="e.g. unboxing paket, kaget liat isi, zoom texture serum..."
-              value={concept}
-              onChange={e => setConcept(e.target.value)}
-            />
-
-            <div style={{ marginTop: '20px' }}>
-              <label style={STYLES.label}>Target Duration (Secs)</label>
-              <div style={STYLES.pillGroup}>
-                {DURATIONS.map(d => (
-                  <div key={d} style={STYLES.pill(duration === d)} onClick={() => setDuration(d)}>{d}s</div>
-                ))}
-              </div>
-            </div>
-
-            <div style={{ marginTop: '20px' }}>
-              <label style={STYLES.label}>Video Style</label>
-              <div style={STYLES.pillGroup}>
-                {STYLES_OPT.map(s => (
-                  <div key={s.id} style={STYLES.pill(styleMode === s.id)} onClick={() => setStyleMode(s.id)}>{s.label}</div>
-                ))}
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
-              <div style={{ flex: 1 }}>
-                <label style={STYLES.label}>Model</label>
-                <select style={{...STYLES.textarea, minHeight: 'auto', padding: '10px'}} value={model} onChange={e => setModel(e.target.value)}>
-                  {MODELS.map(m => <option key={m} value={m}>{m.toUpperCase()}</option>)}
-                </select>
-              </div>
-              <div style={{ flex: 1 }}>
-                <label style={STYLES.label}>Ratio</label>
-                <select style={{...STYLES.textarea, minHeight: 'auto', padding: '10px'}} value={ratio} onChange={e => setRatio(e.target.value)}>
-                  {RATIOS.map(r => <option key={r} value={r}>{r}</option>)}
-                </select>
-              </div>
-            </div>
-
-            <button 
-              style={{ ...STYLES.button, marginTop: '32px', opacity: (loading || balance < 4) ? 0.5 : 1 }}
-              onClick={handleGenerate} disabled={loading || balance < 4}
-            >
-              {loading ? 'Structuring Sequences...' : '🎬 Build Timeline (4 Tokens)'}
-            </button>
-            {balance < 4 && <p style={{color:'#EF4444', fontSize:'12px', marginTop:'8px', textAlign:'center'}}>Insufficient tokens. Need 4.</p>}
-          </div>
+      <div style={S.container}>
+        <div style={{ color: '#9CA3AF', cursor: 'pointer', marginBottom: '20px', fontSize: '14px' }} onClick={() => navigate('/')}>
+          ← Back to Dashboard
         </div>
 
-        {/* RIGHT PANEL: Output Timeline */}
-        <div style={STYLES.rightPanel}>
-          {result ? (
-            <>
-              {/* Visual Timeline Bar */}
-              <div style={{ marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <label style={STYLES.label}>Timeline Overview ({result.total_duration}s)</label>
-                <button onClick={handleCopyAll} style={{ background: 'rgba(232,130,12,0.1)', color: '#E8820C', border: '1px solid rgba(232,130,12,0.3)', padding: '6px 12px', borderRadius: '6px', fontSize: '12px', cursor: 'pointer', fontWeight: 'bold' }}>
-                  {copied ? '✅ COPIED JSON' : '📋 COPY ALL AS JSON'}
-                </button>
-              </div>
-              
-              <div title="Visual pacing representation" style={STYLES.timelineBar}>
-                {(result?.frames || []).map((f, i) => {
-                  const widthPct = (f.duration_seconds / (result?.total_duration || 1)) * 100
-                  const color = COLORS[i % COLORS.length]
-                  return (
-                    <div key={i} style={STYLES.timelineSegment(color, widthPct)} title={`Frame ${f.frame_number}: ${f.duration_seconds}s`}>
-                      {widthPct > 10 ? `${f.duration_seconds}s` : ''}
-                    </div>
-                  )
-                })}
-              </div>
+        <div style={{ marginBottom: '32px' }}>
+          <h1 style={{ fontSize: '26px', fontWeight: '700', marginBottom: '8px' }}>Frame Sequence Builder</h1>
+          <p style={{ color: '#9CA3AF', fontSize: '14px' }}>Paste link produk Shopee → alur video UGC + 4 gambar siap pakai.</p>
+        </div>
 
-              {/* Frame Cards List */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
-                {(result?.frames || []).map((frame, index) => (
-                  <div key={index} style={STYLES.frameCard}>
-                    <div style={STYLES.frameHeader}>
-                      <span style={STYLES.frameTitle}>
-                        <span style={{ color: COLORS[index % COLORS.length], marginRight: '8px' }}>■</span>
-                        Frame {frame.frame_number} • {frame.type}
-                      </span>
-                      <div style={{ display: 'flex', gap: '8px' }}>
-                        <span style={STYLES.frameMeta}>⏱ {frame.duration_seconds}s</span>
-                        <span style={STYLES.frameMeta}>🎥 {frame.camera}</span>
-                      </div>
-                    </div>
-                    
-                    <textarea 
-                      style={STYLES.editArea}
-                      value={frame.prompt}
-                      onChange={(e) => updateFramePrompt(index, e.target.value)}
-                    />
-                    
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px' }}>
-                      <span style={{ fontSize: '11px', color: '#6B7280' }}>Transition: {frame.transition.toUpperCase()}</span>
-                      <button 
-                        onClick={() => navigator.clipboard.writeText(frame.prompt)}
-                        style={{ background: 'transparent', border: 'none', color: '#9CA3AF', fontSize: '12px', cursor: 'pointer' }}>
-                        Copy Prompt
-                      </button>
-                    </div>
+        <div style={S.twoCol}>
+          {/* LEFT: Input Panel */}
+          <div style={S.card}>
+            <div style={{ marginBottom: '20px' }}>
+              <label style={S.label}>Link Produk Shopee</label>
+              <input
+                style={S.input}
+                placeholder="https://shopee.co.id/Nama-Produk-i.xxx.yyy"
+                value={shopeeUrl}
+                onChange={e => setShopeeUrl(e.target.value)}
+                disabled={loading}
+              />
+            </div>
+
+            <div style={{ marginBottom: '20px' }}>
+              <label style={S.label}>Angle / Catatan (opsional)</label>
+              <textarea
+                style={S.textarea}
+                placeholder={'Contoh: close up tekstur, tampak samping, dipakai model, packaging\n(kosongkan untuk default: close up, jauh, samping, belakang)'}
+                value={angleNotes}
+                onChange={e => setAngleNotes(e.target.value)}
+                disabled={loading}
+              />
+            </div>
+
+            <div>
+              <label style={S.label}>AI Model dalam Gambar</label>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {AI_MODEL_OPTIONS.map(o => (
+                  <div key={o.id} style={S.pill(aiModel === o.id)} onClick={() => !loading && setAiModel(o.id)}>
+                    {o.label}
                   </div>
                 ))}
               </div>
-            </>
-          ) : (
-            <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px dashed #2E2E36', borderRadius: '16px', background: '#131317' }}>
-              <p style={{ color: '#6B7280', fontSize: '15px' }}>Configure your concept on the left to build the timeline sequence.</p>
             </div>
-          )}
+
+            {error && <div style={S.error}>{error}</div>}
+
+            <button
+              style={{ ...S.generateBtn, opacity: loading || !shopeeUrl.trim() ? 0.6 : 1, cursor: loading || !shopeeUrl.trim() ? 'not-allowed' : 'pointer' }}
+              onClick={handleGenerate}
+              disabled={loading || !shopeeUrl.trim()}
+            >
+              {loading ? 'Generating... (est. 20-30s)' : 'Generate Sequence (10 tokens)'}
+            </button>
+          </div>
+
+          {/* RIGHT: Output Panel */}
+          <div>
+            {result ? (
+              <>
+                {/* Product Header */}
+                <div style={{ ...S.card, marginBottom: '24px', borderLeft: '4px solid #E8820C' }}>
+                  <div style={{ fontSize: '11px', color: '#9CA3AF', fontWeight: '700', textTransform: 'uppercase', marginBottom: '4px' }}>Produk Terdeteksi</div>
+                  <div style={{ fontSize: '17px', fontWeight: '700', color: '#F3F4F6' }}>{result.product_title}</div>
+                  {result.product_summary && (
+                    <div style={{ fontSize: '13px', color: '#9CA3AF', marginTop: '6px', lineHeight: 1.5 }}>{result.product_summary}</div>
+                  )}
+                </div>
+
+                {/* Storyline */}
+                <div style={{ ...S.card, marginBottom: '24px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                    <span style={{ fontSize: '16px', fontWeight: '700', color: '#F3F4F6' }}>Alur Video</span>
+                    <button style={S.copyBtn} onClick={() => handleCopy(
+                      result.storyline.map(s => `Scene ${s.scene_number} — ${s.title} (${s.duration_seconds}s)\n${s.description}`).join('\n\n'),
+                      'storyline'
+                    )}>
+                      {copied['storyline'] ? 'Copied!' : 'Copy Semua'}
+                    </button>
+                  </div>
+
+                  {/* Timeline bar */}
+                  <div style={{ display: 'flex', height: '20px', borderRadius: '10px', overflow: 'hidden', marginBottom: '20px', border: '1px solid #2E2E36' }}>
+                    {result.storyline.map((scene, i) => {
+                      const total = result.storyline.reduce((sum, s) => sum + s.duration_seconds, 0)
+                      const pct = (scene.duration_seconds / total) * 100
+                      return (
+                        <div key={i} style={{ height: '100%', width: `${pct}%`, background: SCENE_COLORS[i % SCENE_COLORS.length], display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: '800', color: '#fff' }}
+                          title={`Scene ${scene.scene_number}: ${scene.duration_seconds}s`}>
+                          {pct > 10 ? `${scene.duration_seconds}s` : ''}
+                        </div>
+                      )
+                    })}
+                  </div>
+
+                  {result.storyline.map((scene, i) => (
+                    <div key={i} style={S.sceneCard}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: SCENE_COLORS[i % SCENE_COLORS.length], display: 'inline-block', flexShrink: 0 }} />
+                          <span style={{ fontSize: '13px', fontWeight: '700', color: '#F3F4F6' }}>Scene {scene.scene_number} — {scene.title}</span>
+                        </div>
+                        <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+                          <span style={{ fontSize: '11px', color: '#9CA3AF', background: '#1C1C21', padding: '3px 8px', borderRadius: '4px' }}>{scene.duration_seconds}s</span>
+                          <span style={{ fontSize: '11px', color: '#9CA3AF', background: '#1C1C21', padding: '3px 8px', borderRadius: '4px' }}>{scene.camera}</span>
+                        </div>
+                      </div>
+                      <p style={{ color: '#D1D5DB', fontSize: '13px', lineHeight: 1.6, margin: 0 }}>{scene.description}</p>
+                      <div style={{ marginTop: '6px', fontSize: '11px', color: '#6B7280' }}>Transition: {scene.transition}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* 4 Generated Images */}
+                <div style={S.card}>
+                  <div style={{ fontSize: '16px', fontWeight: '700', color: '#F3F4F6', marginBottom: '20px', paddingBottom: '8px', borderBottom: '1px solid #2E2E36' }}>
+                    4 Generated Images
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                    {result.image_prompts.map((img, i) => {
+                      const imgUrl = result.generated_image_urls?.[i]
+                      const proxifiedUrl = imgUrl ? proxify(imgUrl) : null
+                      return (
+                        <div key={i} style={S.imageCard}>
+                          {/* Image */}
+                          {proxifiedUrl ? (
+                            <div style={{ position: 'relative', aspectRatio: '1/1', background: '#131317' }}>
+                              <img
+                                src={proxifiedUrl}
+                                alt={img.angle}
+                                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                              />
+                              <a
+                                href={proxifiedUrl}
+                                download={`${img.angle.replace(/\s+/g, '-')}.png`}
+                                onClick={async (e) => {
+                                  e.preventDefault()
+                                  try {
+                                    const res = await fetch(proxifiedUrl)
+                                    const blob = await res.blob()
+                                    const obj = URL.createObjectURL(blob)
+                                    const a = document.createElement('a')
+                                    a.href = obj
+                                    a.download = `${img.angle.replace(/\s+/g, '-')}.png`
+                                    a.click()
+                                    URL.revokeObjectURL(obj)
+                                  } catch { window.open(proxifiedUrl, '_blank') }
+                                }}
+                                style={{ position: 'absolute', top: '8px', right: '8px', background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none', borderRadius: '6px', padding: '4px 10px', fontSize: '12px', cursor: 'pointer', textDecoration: 'none', fontWeight: '600' }}
+                              >
+                                ↓
+                              </a>
+                            </div>
+                          ) : (
+                            <div style={{ aspectRatio: '1/1', background: '#131317', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <span style={{ color: '#6B7280', fontSize: '13px' }}>Gagal generate</span>
+                            </div>
+                          )}
+
+                          {/* Prompt info */}
+                          <div style={{ padding: '12px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                              <div>
+                                <span style={{ fontSize: '13px', fontWeight: '700', color: '#E8820C' }}>{img.angle}</span>
+                                <span style={{ fontSize: '11px', color: '#6B7280', marginLeft: '8px' }}>{img.shot_type}</span>
+                              </div>
+                              <button style={S.copyBtn} onClick={() => handleCopy(img.prompt, `img-${i}`)}>
+                                {copied[`img-${i}`] ? 'Copied!' : 'Copy'}
+                              </button>
+                            </div>
+                            <p style={{ color: '#9CA3AF', fontSize: '12px', lineHeight: 1.5, margin: 0, fontFamily: 'monospace', wordBreak: 'break-word' }}>
+                              {img.prompt.length > 120 ? img.prompt.slice(0, 120) + '…' : img.prompt}
+                            </p>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div style={{ height: '400px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px dashed #2E2E36', borderRadius: '16px', background: '#131317' }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '32px', marginBottom: '12px' }}>🛍️</div>
+                  <p style={{ color: '#6B7280', fontSize: '15px' }}>Paste link Shopee di kiri untuk mulai.</p>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

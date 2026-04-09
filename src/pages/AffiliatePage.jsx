@@ -127,7 +127,7 @@ export default function AffiliatePage() {
             style={{ ...styles.analyzeBtn, opacity: loading || !videoUrl.trim() ? 0.6 : 1 }}
             onClick={handleAnalyze} disabled={loading || !videoUrl.trim()}
           >
-            {loading ? 'Analyzing Marketing Performance...' : 'Audit & Extract Assets (5 tokens)'}
+            {loading ? 'Downloading & Analyzing Video... (est. 20-40s)' : 'Audit & Extract Assets (5 tokens)'}
           </button>
         </div>
 
